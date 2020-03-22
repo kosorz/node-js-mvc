@@ -17,7 +17,8 @@ app.use('/admin', adminData.routes)
 app.use(shopRoutes)
 
 app.use((req, res, next) => {
-    res.status(404).render('404')
+    const code = 404
+    res.status(code).render('404', {pageTitle: `Error ${code}`})
 })
 
 app.listen(3000) 
