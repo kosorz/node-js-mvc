@@ -17,6 +17,12 @@ const getProductsFromFile = cb => {
   });
 };
 
+const saveData = (data) => {
+  fs.writeFile(p, JSON.stringify(data), err => {
+    console.log(err);
+  });
+}
+
 module.exports = class Product {
   constructor(id, title, imageUrl, description, price) {
     this.id = id;
@@ -28,12 +34,6 @@ module.exports = class Product {
 
   save() {
     getProductsFromFile(products => {
-      const saveData = (data) => {
-        fs.writeFile(p, JSON.stringify(data), err => {
-          console.log(err);
-        });
-      }
-
       if (this.id) {
         const existingProductIndex = products.findIndex(prod => prod.id === this.id);
         const updatedProducts = [...products];
@@ -45,6 +45,15 @@ module.exports = class Product {
         saveData(products);
       }
     });
+  }
+
+  delete() {
+    getProductsFromFile(products => {
+      const existingProductIndex = products.findIndex(prod => prod.id === this.id);
+      const updatedProducts = [...products];
+      updatedProducts.splice(existingProductIndex, 1);
+      saveData(updatedProducts);
+    })
   }
 
   static fetchAll(cb) {
