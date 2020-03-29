@@ -59,8 +59,7 @@ module.exports = class Product {
       const updatedProducts = products.filter(prod => prod.id !== id);
       saveData(updatedProducts, (err) => {
         if (!err) {
-          Cart.deleteProduct(id, product.price);
-          cb();
+          Cart.deleteProduct(id, product.price, true , cb);
         }
       });
     })

@@ -36,7 +36,7 @@ module.exports = class Cart {
         })
     }
 
-    static deleteProduct(id, productPrice) {
+    static deleteProduct(id, productPrice, deleteAll, cb) {
         fs.readFile(p, (err, fileContent) => {
             if (err) {
                 return;
@@ -45,15 +45,36 @@ module.exports = class Cart {
             const updatedCart = { ...cart };
 
             const product = updatedCart.products.find(prod => prod.id === id);
+
             if (!product) {
+                cb();
                 return;
             }
-            const productQty = product.qty;
-            updatedCart.products = updatedCart.products.filter(prod => prod.id !== id);
-            updatedCart.totalPrice = updatedCart.totalPrice - (productPrice * productQty);
 
+            const productQty = product.qty;
+
+            if (deleteAll) {
+                updatedCart.products = updatedCart.products.filter(prod => prod.id !== id);
+                updatedCart.totalPrice = updatedCart.totalPrice - (productPrice * productQty);
+            } else {
+                if (productQty === 1) {
+                    updatedCart.products = updatedCart.products.filter(prod => prod.id !== id);
+                } else {
+                    updatedCart.products.forEach(prod => {
+                        if (prod.id === id) {
+                            prod.qty = +prod.qty - 1;
+                        }
+                    });
+                }
+                updatedCart.totalPrice = updatedCart.totalPrice - productPrice;
+
+            }
             fs.writeFile(p, JSON.stringify(updatedCart), err => {
-                console.log(err);
+                if (!err) {
+                    cb();
+                } else {
+                    console.log(err);
+                }
             })
         });
     }
