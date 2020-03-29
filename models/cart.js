@@ -57,4 +57,15 @@ module.exports = class Cart {
             })
         });
     }
+
+    static getCart(cb) {
+        fs.readFile(p, (err, fileContent) => {
+            if (err) {
+                console.log(err);
+                cb({ products: [], totalPrice: 0 })
+            } else {
+                cb(JSON.parse(fileContent));
+            }
+        })
+    }
 }
