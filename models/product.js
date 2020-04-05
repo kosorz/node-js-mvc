@@ -39,7 +39,7 @@ class Product {
     const db = getDb();
     return db
       .collection("products")
-      .findOneAndDelete({ _id: new ObjectId(id) });
+      .deleteOne({ _id: new ObjectId(id) });
   }
 }
 

@@ -56,9 +56,10 @@ exports.postAddProduct = async (req, res, next) => {
 
 exports.postEditProduct = async (req, res, next) => {
   const { title, imageUrl, description, price, productId } = req.body;
+  
   try {
-    const updatedProduct = new Product(title, price, imageUrl, description, productId).save();
-    updatedProduct && res.redirect("/admin/products");
+    const updated = new Product(title, price, imageUrl, description, productId).save();
+    updated && res.redirect("/admin/products");
   } catch (err) {
     console.log(err);
   }
