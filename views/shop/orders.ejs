@@ -5,7 +5,7 @@
         <%- include('../includes/navigation.ejs') %>
         <main>
             <% if (orders.length > 0) { %>
-                <ul>
+                <ul >
                     <% orders.forEach(order => { %>
                         <li>
                             <h1># <%= order.id %></h1>
@@ -18,7 +18,7 @@
                             </ul>
                         </li>
                     <% }) %> 
-                </ul>
+                </ul >
             <% } else { %> 
                 <h1>No order placed yet!</h1>
             <% } %> 

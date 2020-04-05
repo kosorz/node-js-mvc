@@ -1,30 +1,28 @@
-const Sequelize = require("sequelize");
+const getDb = require("../util/database").getDb;
+var ObjectId = require('mongodb').ObjectID;
 
-const sequelize = require("../util/database");
-
-const Product = sequelize.define("product", {
-  id: {
-    type: Sequelize.INTEGER,
-    autoIncrement: true,
-    allowNull: false,
-    primaryKey: true
-  },
-  title: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  price: {
-    type: Sequelize.DOUBLE,
-    allowNull: false
-  },
-  imageUrl: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  description: {
-    type: Sequelize.STRING,
-    allowNull: false
+class Product {
+  constructor(title, price, description, imageUrl) {
+    this.title = title;
+    this.price = price;
+    this.description = description;
+    this.imageUrl = imageUrl;
   }
-});
+
+  save() {
+    const db = getDb();
+      return db.collection("products").insertOne(this);
+  }
+
+  static fetchAll() {
+    const db = getDb();
+    return db.collection("products").find().toArray();
+  }
+
+  static fetchById(id) {
+    const db = getDb();
+    return db.collection("products").findOne(new ObjectId(id));
+  }
+}
 
 module.exports = Product;
