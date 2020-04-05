@@ -7,7 +7,7 @@ class Product {
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
-    this._id = id;
+    this._id = new ObjectId(id);
   }
 
   save() {
@@ -17,12 +17,7 @@ class Product {
     if (this._id) {
       dbOp = db
       .collection("products")
-      .updateOne({ _id: new ObjectId(this._id) }, { $set: {
-        title: this.title,
-        price: this.price,
-        imageUrl: this.imageUrl,
-        description: this.description,
-      } });
+      .updateOne({ _id: this._id }, { $set: this });
     } else {
       dbOp = db.collection("products").insertOne(this);
     }
