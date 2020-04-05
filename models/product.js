@@ -2,16 +2,32 @@ const getDb = require("../util/database").getDb;
 var ObjectId = require("mongodb").ObjectID;
 
 class Product {
-  constructor(title, price, description, imageUrl) {
+  constructor(title, price, imageUrl, description, id) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
+    this._id = id;
   }
 
   save() {
     const db = getDb();
-    return db.collection("products").insertOne(this);
+    let dbOp;
+
+    if (this._id) {
+      dbOp = db
+      .collection("products")
+      .updateOne({ _id: new ObjectId(this._id) }, { $set: {
+        title: this.title,
+        price: this.price,
+        imageUrl: this.imageUrl,
+        description: this.description,
+      } });
+    } else {
+      dbOp = db.collection("products").insertOne(this);
+    }
+
+    return dbOp;
   }
 
   static fetchAll() {
@@ -24,18 +40,11 @@ class Product {
     return db.collection("products").findOne(new ObjectId(id));
   }
 
-  static update(id, data) {
-    const db = getDb();
-    return db
-      .collection("products")
-      .findOneAndUpdate({ _id: new ObjectId(id) }, { $set: data });
-  }
-
   static deleteById(id) {
     const db = getDb();
     return db
       .collection("products")
-      .findOneAndDelete({ _id: new ObjectId(id)});
+      .findOneAndDelete({ _id: new ObjectId(id) });
   }
 }
 
