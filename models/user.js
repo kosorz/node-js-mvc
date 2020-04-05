@@ -1,5 +1,6 @@
 const getDb = require("../util/database").getDb;
 var ObjectId = require("mongodb").ObjectID;
+const Product = require("./product");
 
 class User {
   constructor(username, email, cart, id) {
@@ -44,6 +45,21 @@ class User {
         { _id: new ObjectId(this._id) },
         { $set: { cart: updatedCart } }
       );
+  }
+
+  async getCart() {
+    const products = await Product.fetchByIds(
+      this.cart.items.map((item) => item.productId)
+    );
+
+    return products.map((product) => {
+      return {
+        ...product,
+        quantity: this.cart.items.find((i) => {
+          return i.productId.toString() === product._id.toString();
+        }).quantity,
+      };
+    });
   }
 
   static fetchById(id) {

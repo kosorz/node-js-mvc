@@ -31,10 +31,26 @@ exports.getProduct = async (req, res, next) => {
 
   try {
     const product = await Product.fetchById(prodId);
+
     res.render("shop/product-detail", {
       pageTitle: product.title + " Details",
       path: "/products",
       product: product,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+exports.getCart = async (req, res, next) => {
+
+  try {
+    const cart = await req.user.getCart();
+
+    res.render("shop/cart", {
+      path: "/cart",
+      pageTitle: "Your cart",
+      products: cart,
     });
   } catch (err) {
     console.log(err);
@@ -59,22 +75,6 @@ exports.getCheckout = (req, res, next) => {
   //   path: "/checkout",
   //   pageTitle: "Checkout",
   // });
-};
-
-exports.getCart = (req, res, next) => {
-  // req.user
-  //   .getCart()
-  //   .then((cart) => {
-  //     return cart.getProducts();
-  //   })
-  //   .then((products) => {
-  //     res.render("shop/cart", {
-  //       path: "/cart",
-  //       pageTitle: "Your cart",
-  //       products: products,
-  //     });
-  //   })
-  //   .catch((err) => console.log(err));
 };
 
 exports.postCart = async (req, res, next) => {

@@ -36,6 +36,13 @@ class Product {
     return db.collection("products").findOne(new ObjectId(id));
   }
 
+  static fetchByIds(ids) {
+    const db = getDb();
+    return db
+      .collection("products")
+      .find({ _id: { $in: ids.map((id) => new ObjectId(id)) } }).toArray();
+  }
+
   static deleteById(id) {
     const db = getDb();
     return db.collection("products").deleteOne({ _id: new ObjectId(id) });
