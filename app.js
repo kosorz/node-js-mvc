@@ -21,10 +21,10 @@ app.use(async (req, res, next) => {
   try {
     const user = await User.fetchById("5e89c4fe437c7703bd4f2bbd");
     req.user = user;
+    next();
   } catch (err) {
     console.log(err);
   }
-  next();
 });
 
 app.use("/admin", adminRoutes);
