@@ -89,19 +89,74 @@ class User {
       );
   }
 
-  async getCart() {
-    const products = await Product.fetchByIds(
-      this.cart.items.map((item) => item.productId)
-    );
+  async getCartOrOrder(cartOrOrder = this.cart) {
+    let products;
+    try {
+      products = await Product.fetchByIds(
+        cartOrOrder.items.map((item) => item.productId)
+      );
+    } catch (err) {
+      console.log(err);
+    }
 
     return products.map((product) => {
       return {
         ...product,
-        quantity: this.cart.items.find((i) => {
+        quantity: cartOrOrder.items.find((i) => {
           return i.productId.toString() === product._id.toString();
         }).quantity,
       };
     });
+  }
+
+  async getOrders() {
+    const db = getDb();
+    let orders;
+
+    try {
+      orders = await db
+        .collection("orders")
+        .find({ userId: new ObjectId(this._id) })
+        .toArray();
+    } catch (err) {
+      console.log(err);
+    }
+
+    return Promise.all(
+      orders.map(async (order) => {
+        try {
+          return {
+            ...order,
+            items: await this.getCartOrOrder(order),
+          };
+        } catch (err) {
+          console.log(err);
+        }
+      })
+    );
+  }
+
+  async addOrder() {
+    const db = getDb();
+    let orderAdded;
+
+    try {
+      orderAdded = await db
+        .collection("orders")
+        .insertOne({ ...this.cart, userId: this._id });
+    } catch (err) {
+      console.log(err);
+    }
+
+    return (
+      orderAdded &&
+      db
+        .collection("users")
+        .updateOne(
+          { _id: new ObjectId(this._id) },
+          { $set: { cart: { items: [] } } }
+        )
+    );
   }
 
   static fetchById(id) {
