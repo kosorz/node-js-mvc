@@ -44,7 +44,7 @@ exports.getProduct = async (req, res, next) => {
 
 exports.getCart = async (req, res, next) => {
   try {
-    const cart = await req.user.getCartOrOrder();
+    const cart = await req.user.getCart();
 
     res.render("shop/cart", {
       path: "/cart",

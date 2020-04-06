@@ -89,11 +89,11 @@ class User {
       );
   }
 
-  async getCartOrOrder(cartOrOrder = this.cart) {
+  async getCart() {
     let products;
     try {
       products = await Product.fetchByIds(
-        cartOrOrder.items.map((item) => item.productId)
+        this.cart.items.map((item) => item.productId)
       );
     } catch (err) {
       console.log(err);
@@ -102,48 +102,33 @@ class User {
     return products.map((product) => {
       return {
         ...product,
-        quantity: cartOrOrder.items.find((i) => {
+        quantity: this.cart.items.find((i) => {
           return i.productId.toString() === product._id.toString();
         }).quantity,
       };
     });
   }
 
-  async getOrders() {
+  async addOrder() {
     const db = getDb();
-    let orders;
+    let orderAdded;
+    let cart;
 
     try {
-      orders = await db
-        .collection("orders")
-        .find({ userId: new ObjectId(this._id) })
-        .toArray();
+      cart = await this.getCart();
     } catch (err) {
       console.log(err);
     }
 
-    return Promise.all(
-      orders.map(async (order) => {
-        try {
-          return {
-            ...order,
-            items: await this.getCartOrOrder(order),
-          };
-        } catch (err) {
-          console.log(err);
-        }
-      })
-    );
-  }
-
-  async addOrder() {
-    const db = getDb();
-    let orderAdded;
-
     try {
-      orderAdded = await db
-        .collection("orders")
-        .insertOne({ ...this.cart, userId: this._id });
+      orderAdded = await db.collection("orders").insertOne({
+        items: [...cart],
+        user: {
+          _id: new ObjectId(this._id),
+          name: this.name,
+          email: this.email,
+        },
+      });
     } catch (err) {
       console.log(err);
     }
@@ -157,6 +142,15 @@ class User {
           { $set: { cart: { items: [] } } }
         )
     );
+  }
+
+  async getOrders() {
+    const db = getDb();
+
+    return await db
+    .collection("orders")
+    .find({ "user._id": new ObjectId(this._id) })
+    .toArray();
   }
 
   static fetchById(id) {
