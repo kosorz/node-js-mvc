@@ -47,6 +47,48 @@ class User {
       );
   }
 
+  deleteFromCart(productId) {
+    const db = getDb();
+
+    const cartProductIndex = this.cart.items.findIndex((cp) => {
+      return cp.productId.toString() === productId;
+    });
+
+    let updatedCartItems = [...this.cart.items];
+    let currentQuantity = this.cart.items[cartProductIndex].quantity;
+
+    if (cartProductIndex <= 0) {
+      return;
+    }
+
+    if (currentQuantity > 1) {
+      updatedCartItems = updatedCartItems.map((cp) => {
+        return {
+          ...cp,
+          quantity:
+            cp.productId.toString() === productId.toString()
+              ? cp.quantity - 1
+              : cp.quantity,
+        };
+      });
+    } else {
+      updatedCartItems = updatedCartItems.filter(
+        (cp) => cp.productId.toString() !== productId.toString()
+      );
+    }
+
+    const updatedCart = {
+      items: updatedCartItems,
+    };
+
+    return db
+      .collection("users")
+      .updateOne(
+        { _id: new ObjectId(this._id) },
+        { $set: { cart: updatedCart } }
+      );
+  }
+
   async getCart() {
     const products = await Product.fetchByIds(
       this.cart.items.map((item) => item.productId)

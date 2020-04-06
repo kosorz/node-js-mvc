@@ -89,27 +89,16 @@ exports.postCart = async (req, res, next) => {
   }
 };
 
-exports.postCartDeleteProduct = (req, res, next) => {
-  // const prodId = req.body.productId;
-  // req.user
-  //   .getCart()
-  //   .then((cart) => {
-  //     cart
-  //       .getProducts({ where: { id: prodId } })
-  //       .then((products) => {
-  //         const product = products[0];
-  //         if (product.cartItem.qty > 1) {
-  //           product.cartItem.qty -= 1;
-  //           return product.cartItem.save();
-  //         }
-  //         return product.cartItem.destroy();
-  //       })
-  //       .then(() => {
-  //         res.redirect("/cart");
-  //       })
-  //       .catch();
-  //   })
-  //   .catch((err) => console.log(err));
+exports.postCartDeleteProduct = async (req, res, next) => {
+  const prodId = req.body.productId;
+
+  try {
+    const productDeleted = await req.user.deleteFromCart(prodId)
+
+    productDeleted && res.redirect("/cart");
+  } catch(err) {
+    console.log(err)
+  }
 };
 
 exports.postOrder = async (req, res, next) => {
