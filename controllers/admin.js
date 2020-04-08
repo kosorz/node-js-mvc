@@ -10,7 +10,7 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.fetchAll();
+    const products = await Product.find().populate("userId");
     res.render("admin/products", {
       prods: products,
       pageTitle: "Admin Products",
@@ -30,7 +30,7 @@ exports.getEditProduct = async (req, res, next) => {
   }
 
   try {
-    const product = await Product.fetchById(productId);
+    const product = await Product.findById(productId);
     res.render("admin/edit-product", {
       pageTitle: "Edit Product",
       path: "/admin/edit-product",
@@ -44,7 +44,14 @@ exports.getEditProduct = async (req, res, next) => {
 
 exports.postAddProduct = async (req, res, next) => {
   const { title, imageUrl, description, price } = req.body;
-  const product = new Product(title, price, imageUrl, description, req.user._id);
+
+  const product = new Product({
+    title,
+    price,
+    imageUrl,
+    description,
+    userId: req.user,
+  });
 
   try {
     const saved = await product.save();
@@ -56,10 +63,15 @@ exports.postAddProduct = async (req, res, next) => {
 
 exports.postEditProduct = async (req, res, next) => {
   const { title, imageUrl, description, price, productId } = req.body;
-  
+
   try {
-    const updated = new Product(title, price, imageUrl, description, req.user._id, productId).save();
-    updated && res.redirect("/admin/products");
+    const product = await Product.findById(productId);
+    product.title = title;
+    product.imageUrl = imageUrl;
+    product.price = price;
+    product.description = description;
+    const saved = product.save();
+    saved && res.redirect("/admin/products");
   } catch (err) {
     console.log(err);
   }
@@ -69,8 +81,8 @@ exports.postDeleteProduct = async (req, res, next) => {
   const { productId } = req.body;
 
   try {
-    const deleted = await Product.deleteById(productId);
-    deleted && res.redirect("/admin/products");
+    const removed = await Product.findByIdAndRemove(productId);
+    removed && res.redirect("/admin/products");
   } catch (err) {
     console.log(err);
   }

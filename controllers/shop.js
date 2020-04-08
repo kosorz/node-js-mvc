@@ -1,8 +1,9 @@
 const Product = require("../models/product");
+const User = require("../models/user");
 
 exports.getIndex = async (req, res, next) => {
   try {
-    const products = await Product.fetchAll();
+    const products = await Product.find();
     res.render("shop/index", {
       prods: products,
       pageTitle: "Shop",
@@ -15,7 +16,7 @@ exports.getIndex = async (req, res, next) => {
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.fetchAll();
+    const products = await Product.find();
     res.render("shop/product-list", {
       prods: products,
       pageTitle: "All Products",
@@ -30,7 +31,7 @@ exports.getProduct = async (req, res, next) => {
   const prodId = req.params.productId;
 
   try {
-    const product = await Product.fetchById(prodId);
+    const product = await Product.findById(prodId);
 
     res.render("shop/product-detail", {
       pageTitle: product.title + " Details",
@@ -44,12 +45,14 @@ exports.getProduct = async (req, res, next) => {
 
 exports.getCart = async (req, res, next) => {
   try {
-    const cart = await req.user.getCart();
+    const userWithCart = await req.user
+      .populate("cart.items.productId")
+      .execPopulate();
 
     res.render("shop/cart", {
       path: "/cart",
       pageTitle: "Your cart",
-      products: cart,
+      products: userWithCart.cart.items,
     });
   } catch (err) {
     console.log(err);
@@ -73,7 +76,7 @@ exports.postCart = async (req, res, next) => {
   const prodId = req.body.productId;
 
   try {
-    const product = await Product.fetchById(prodId);
+    const product = await Product.findById(prodId);
     const addedToCart = await req.user.addToCart(product);
     addedToCart && res.redirect("/cart");
   } catch (err) {
