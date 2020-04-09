@@ -85,9 +85,35 @@ userSchema.methods.deleteFromCart = function (productId) {
   return this.save();
 };
 
+userSchema.methods.getCart = async function () {
+  const populatedUser = await this.model("User")
+    .findOne(this)
+    .populate("cart.items.productId", "-_id -userId");
+  return populatedUser.cart.items;
+};
+
 userSchema.methods.addOrder = async function () {
   let orderAdded;
-  const order = new Order({ userId: this, items: this.cart.items });
+  let items;
+
+  try {
+    items = await this.getCart();
+  } catch (err) {
+    console.log(err);
+  }
+
+  const order = new Order({
+    user: {
+      name: this.name,
+      userId: this,
+    },
+    products: items.map((item) => {
+      return {
+        quantity: item.quantity,
+        product: { ...item.productId },
+      };
+    }),
+  });
 
   try {
     orderAdded = order.save();
@@ -96,11 +122,12 @@ userSchema.methods.addOrder = async function () {
   }
 
   this.cart.items = [];
+
   return orderAdded && this.save();
 };
 
 userSchema.methods.getOrders = function () {
-  return Order.find({ userId: this }).populate("items.productId");
+  return Order.find({ "user.userId": this });
 };
 
 module.exports = mongoose.model("User", userSchema);
