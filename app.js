@@ -3,11 +3,19 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoDbStore = require("connect-mongodb-session")(session);
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 
+const MONGO_DB_URI =
+  "mongodb+srv://Arturito:xXUKZ5SKPt6_gQ9@node-training-7n0n7.mongodb.net/shop?retryWrites=true&w=majority";
+
 const app = express();
+const store = new MongoDbStore({
+  uri: MONGO_DB_URI,
+  collection: "sessions",
+});
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -23,16 +31,26 @@ app.use(
     secret: "this_is_node_traning_session_secret",
     resave: false,
     saveUninitialized: false,
+    store: store,
   })
 );
 
 app.use(async (req, res, next) => {
-  try {
-    const user = await User.findById("5e8cae08b46d33fc05f33094");
-    req.user = user;
-    user && next();
-  } catch (err) {
-    console.log(err);
+  if (req.session && req.session.userId) {
+    let user;
+    try {
+      user = await User.findById(req.session.userId);
+      if (user) {
+        req.user = user;
+        next();
+      } else {
+        next(new Error("Could not restore User from Session."));
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  } else {
+    next();
   }
 });
 
@@ -44,18 +62,8 @@ app.use(errorController.get404);
 mongoose.set("useUnifiedTopology", true);
 mongoose.set("useNewUrlParser", true);
 mongoose
-  .connect(
-    "mongodb+srv://Arturito:xXUKZ5SKPt6_gQ9@node-training-7n0n7.mongodb.net/shop?retryWrites=true&w=majority"
-  )
+  .connect(MONGO_DB_URI)
   .then(async () => {
-    // const user = new User({
-    //   email: "kosorz.artur@gmail.com",
-    //   name: "Artur Kosorz",
-    //   cart: {
-    //     items: [],
-    //   },
-    // });
-    // const saved = await user.save();
     app.listen(3000);
   })
   .catch((err) => console.log(err));
