@@ -36,10 +36,10 @@ app.use(
 );
 
 app.use(async (req, res, next) => {
-  if (req.session && req.session.userId) {
+  if (req.session && req.session.user) {
     let user;
     try {
-      user = await User.findById(req.session.userId);
+      user = await User.findById(req.session.user);
       if (user) {
         req.user = user;
         next();
