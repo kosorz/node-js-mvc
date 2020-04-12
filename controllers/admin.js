@@ -1,10 +1,14 @@
 const Product = require("../models/product");
+const { validationResult } = require("express-validator");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
     editing: false,
+    errorMessage: req.flash("error")[0],
+    values: { price: null, description: "", imageUrl: "", title: "" },
+    validationErrors: [],
   });
 };
 
@@ -31,11 +35,14 @@ exports.getEditProduct = async (req, res, next) => {
 
   try {
     const product = await Product.findById(productId);
+    const { price, description, imageUrl, title, _id } = product;
     res.render("admin/edit-product", {
       pageTitle: "Edit Product",
       path: "/admin/edit-product",
       editing: editMode,
-      product: product,
+      errorMessage: req.flash("error")[0],
+      values: { price, description, imageUrl, title, _id },
+      validationErrors: [],
     });
   } catch (err) {
     console.log(err);
@@ -44,6 +51,18 @@ exports.getEditProduct = async (req, res, next) => {
 
 exports.postAddProduct = async (req, res, next) => {
   const { title, imageUrl, description, price } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render("admin/edit-product", {
+      pageTitle: "Add Product",
+      path: "/admin/add-product",
+      editing: false,
+      errorMessage: errors.array()[0].msg,
+      values: { price, description, imageUrl, title },
+      validationErrors: errors.array(),
+    });
+  }
 
   const product = new Product({
     title,
@@ -63,6 +82,18 @@ exports.postAddProduct = async (req, res, next) => {
 
 exports.postEditProduct = async (req, res, next) => {
   const { title, imageUrl, description, price, productId } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render("admin/edit-product", {
+      pageTitle: "Edit Product",
+      path: "/admin/edit-product",
+      editing: true,
+      errorMessage: errors.array()[0].msg,
+      values: { price, description, imageUrl, title, _id: productId },
+      validationErrors: errors.array(),
+    });
+  }
 
   let product;
   try {

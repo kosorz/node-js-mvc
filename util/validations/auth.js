@@ -5,7 +5,8 @@ const emailPresentValidation = body("email")
   .notEmpty()
   .withMessage("Email must be provided")
   .isEmail()
-  .withMessage("Invalid email format");
+  .withMessage("Invalid email format")
+  .normalizeEmail();
 
 const passwordPresentValidation = body("password")
   .notEmpty()
@@ -27,7 +28,8 @@ const newEmailValidation = body("email")
     if (emailUsed) {
       throw new Error("Email already used");
     }
-  });
+  })
+  .normalizeEmail();
 
 const newPasswordValidation = body("password")
   .notEmpty()
