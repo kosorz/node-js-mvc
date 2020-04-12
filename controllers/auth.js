@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
 const crypto = require("crypto");
+const { validationResult } = require("express-validator");
 
 const User = require("../models/user");
 
@@ -18,6 +19,8 @@ exports.getLogin = (req, res, next) => {
     path: "/login",
     pageTitle: "Login",
     errorMessage: req.flash("error")[0],
+    values: { email: "", password: "" },
+    validationErrors: [],
   });
 };
 
@@ -26,6 +29,8 @@ exports.getSignup = (req, res, next) => {
     path: "/signup",
     pageTitle: "Signup",
     errorMessage: req.flash("error")[0],
+    values: { email: "", password: "", confirmPassword: "" },
+    validationErrors: [],
   });
 };
 
@@ -34,6 +39,8 @@ exports.getReset = (req, res, next) => {
     path: "/reset",
     pageTitle: "Reset Password",
     errorMessage: req.flash("error")[0],
+    values: { email: "" },
+    validationErrors: [],
   });
 };
 
@@ -57,11 +64,25 @@ exports.getNewPassword = async (req, res, next) => {
       errorMessage: req.flash("error")[0],
       userId: user._id.toString(),
       passwordToken: token,
+      values: { password: "" },
+      validationErrors: [],
     });
 };
 
 exports.postLogin = async (req, res, next) => {
   const { email, password } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render("auth/login", {
+      path: "/login",
+      pageTitle: "Login",
+      errorMessage: errors.array()[0].msg,
+      values: { email, password },
+      validationErrors: errors.array(),
+    });
+  }
+
   let user;
   try {
     user = await User.findOne({ email: email });
@@ -103,22 +124,16 @@ exports.postLogout = (req, res, next) => {
 
 exports.postSignup = async (req, res, next) => {
   const { email, password, confirmPassword } = req.body;
+  const errors = validationResult(req);
 
-  if (password !== confirmPassword) {
-    req.flash("error", "Passwords do not match");
-    return res.redirect("/signup");
-  }
-
-  let emailUsed;
-  try {
-    emailUsed = await User.findOne({ email: email });
-  } catch (err) {
-    console.log(err);
-  }
-
-  if (emailUsed) {
-    req.flash("error", "Email already used");
-    return res.redirect("/signup");
+  if (!errors.isEmpty()) {
+    return res.status(422).render("auth/signup", {
+      path: "/signup",
+      pageTitle: "Signup",
+      errorMessage: errors.array()[0].msg,
+      values: { email, password, confirmPassword },
+      validationErrors: errors.array(),
+    });
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -129,7 +144,12 @@ exports.postSignup = async (req, res, next) => {
     cart: { items: [] },
   });
 
-  const savedUser = await user.save();
+  let savedUser;
+  try {
+    savedUser = await user.save();
+  } catch (err) {
+    console.log(err);
+  }
 
   let emailSent;
   try {
@@ -148,6 +168,17 @@ exports.postSignup = async (req, res, next) => {
 
 exports.postReset = (req, res, next) => {
   const { email } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render("auth/reset", {
+      path: "/reset",
+      pageTitle: "Reset Password",
+      errorMessage: errors.array()[0].msg,
+      values: { email: email },
+      validationErrors: errors.array(),
+    });
+  }
 
   crypto.randomBytes(32, async (err, buffer) => {
     if (err) {
@@ -195,6 +226,19 @@ exports.postReset = (req, res, next) => {
 
 exports.postNewPassword = async (req, res, next) => {
   const { password, userId, passwordToken } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render("auth/new-password", {
+      path: "/new-password",
+      pageTitle: "New Password",
+      errorMessage: errors.array()[0].msg,
+      userId: userId,
+      passwordToken: passwordToken,
+      values: { password },
+      validationErrors: errors.array(),
+    });
+  }
 
   let user;
   try {

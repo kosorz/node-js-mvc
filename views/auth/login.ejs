@@ -10,12 +10,24 @@
         <% } %> 
         <form class="login-form" action="/login" method="POST">
             <div class="form-control">
-                <label for="title">Email</label>
-                <input type="email" name="email" id="email"/>
+                <label for="email">E-Mail</label>
+                <input 
+                    class="<%= validationErrors.find(e => e.param === "email") ? "invalid" : "" %>"
+                    type="email" 
+                    name="email" 
+                    id="email" 
+                    value="<%= values.email %>" 
+                />
             </div>
             <div class="form-control">
-                <label for="imageUrl">Password</label>
-                <input type="password" name="password" id="password"/>
+                <label for="password">Password</label>
+                <input 
+                    class="<%= validationErrors.find(e => e.param === "password") ? "invalid" : "" %>"
+                    type="password" 
+                    name="password" 
+                    id="password"
+                    value="<%= values.password %>" 
+                />
             </div>
             <input name="_csrf" type="hidden" value="<%= csrfToken %>" />
             <button class="btn" type="submit">Login</button>
