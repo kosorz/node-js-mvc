@@ -9,6 +9,7 @@ const orderSchema = new Schema({
       required: true,
       ref: "User",
     },
+    email: { type: String, required: true },
   },
   products: [
     {

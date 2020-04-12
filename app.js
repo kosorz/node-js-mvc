@@ -5,12 +5,14 @@ const csrf = require("csurf");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoDbStore = require("connect-mongodb-session")(session);
+const flash = require("connect-flash");
+const dotenv = require("dotenv");
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 
-const MONGO_DB_URI =
-  "mongodb+srv://Arturito:xXUKZ5SKPt6_gQ9@node-training-7n0n7.mongodb.net/shop?retryWrites=true&w=majority";
+dotenv.config();
+const MONGO_DB_URI = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@node-training-7n0n7.mongodb.net/shop?retryWrites=true&w=majority`;
 
 const app = express();
 const store = new MongoDbStore({
@@ -37,6 +39,7 @@ app.use(
   })
 );
 app.use(csrfProtection);
+app.use(flash());
 
 app.use(async (req, res, next) => {
   if (req.session && req.session.user) {
