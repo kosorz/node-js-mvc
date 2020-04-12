@@ -10,7 +10,7 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find().populate("userId");
+    const products = await Product.find({ userId: req.user._id });
     res.render("admin/products", {
       prods: products,
       pageTitle: "Admin Products",
@@ -64,24 +64,40 @@ exports.postAddProduct = async (req, res, next) => {
 exports.postEditProduct = async (req, res, next) => {
   const { title, imageUrl, description, price, productId } = req.body;
 
+  let product;
   try {
-    const product = await Product.findById(productId);
-    product.title = title;
-    product.imageUrl = imageUrl;
-    product.price = price;
-    product.description = description;
-    const saved = product.save();
-    saved && res.redirect("/admin/products");
+    product = await Product.findById(productId);
   } catch (err) {
     console.log(err);
   }
+
+  if (req.user._id.toString() !== product.userId.toString()) {
+    return res.redirect("/");
+  }
+
+  product.title = title;
+  product.imageUrl = imageUrl;
+  product.price = price;
+  product.description = description;
+
+  let productSaved;
+  try {
+    productSaved = await product.save();
+  } catch (err) {
+    console.log(err);
+  }
+
+  return productSaved && res.redirect("/admin/products");
 };
 
 exports.postDeleteProduct = async (req, res, next) => {
   const { productId } = req.body;
 
   try {
-    const removed = await Product.findByIdAndRemove(productId);
+    const removed = await Product.deleteOne({
+      _id: productId,
+      userId: req.user._id,
+    });
     removed && res.redirect("/admin/products");
   } catch (err) {
     console.log(err);
