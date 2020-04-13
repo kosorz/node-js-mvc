@@ -1,1 +1,1 @@
-Repo to train creating API
+MVC pattern implemented using Node.js + HTML + CSS.
