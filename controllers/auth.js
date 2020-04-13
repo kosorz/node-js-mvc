@@ -54,7 +54,9 @@ exports.getNewPassword = async (req, res, next) => {
       resetTokenExpiration: { $gt: Date.now() },
     });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   user &&
@@ -87,7 +89,9 @@ exports.postLogin = async (req, res, next) => {
   try {
     user = await User.findOne({ email: email });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   if (!user) {
@@ -99,7 +103,9 @@ exports.postLogin = async (req, res, next) => {
   try {
     doMatch = await bcrypt.compare(password, user.password);
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   if (doMatch) {
@@ -148,7 +154,9 @@ exports.postSignup = async (req, res, next) => {
   try {
     savedUser = await user.save();
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   let emailSent;
@@ -160,7 +168,9 @@ exports.postSignup = async (req, res, next) => {
       html: "<h1>Welcome to node training!</h1>",
     });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   return savedUser && emailSent && res.redirect("/login");
@@ -190,7 +200,9 @@ exports.postReset = (req, res, next) => {
     try {
       user = await User.findOne({ email, email });
     } catch (err) {
-      console.log(err);
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     }
 
     if (!user) {
@@ -216,7 +228,9 @@ exports.postReset = (req, res, next) => {
           `,
         });
       } catch (err) {
-        console.log(err);
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
       }
     }
 
@@ -248,7 +262,9 @@ exports.postNewPassword = async (req, res, next) => {
       resetToken: passwordToken,
     });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   if (!user) {
@@ -259,7 +275,9 @@ exports.postNewPassword = async (req, res, next) => {
   try {
     hashedNewPassword = await bcrypt.hash(password, 12);
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   user.password = hashedNewPassword;
@@ -270,7 +288,9 @@ exports.postNewPassword = async (req, res, next) => {
   try {
     userSaved = await user.save();
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   return userSaved && res.redirect("/login");

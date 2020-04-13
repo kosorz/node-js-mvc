@@ -88,9 +88,16 @@ userSchema.methods.deleteFromCart = function (productId) {
 };
 
 userSchema.methods.getCart = async function () {
-  const populatedUser = await this.model("User")
-    .findOne(this)
-    .populate("cart.items.productId", "-_id -userId");
+  let populatedUser;
+  try {
+    populatedUser = await this.model("User")
+      .findOne(this)
+      .populate("cart.items.productId", "-_id -userId");
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
   return populatedUser.cart.items;
 };
 
@@ -101,7 +108,9 @@ userSchema.methods.addOrder = async function () {
   try {
     items = await this.getCart();
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   const order = new Order({
@@ -120,7 +129,9 @@ userSchema.methods.addOrder = async function () {
   try {
     orderAdded = order.save();
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 
   this.cart.items = [];
